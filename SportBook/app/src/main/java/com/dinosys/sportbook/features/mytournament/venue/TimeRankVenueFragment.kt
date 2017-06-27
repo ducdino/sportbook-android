@@ -1,18 +1,25 @@
 package com.dinosys.sportbook.features.mytournament.venue
 
 import android.support.v7.widget.LinearLayoutManager
+import com.dinosys.sportbook.MainActivity
 import com.dinosys.sportbook.R
 import com.dinosys.sportbook.application.SportbookApp
 import com.dinosys.sportbook.extensions.appContext
+import com.dinosys.sportbook.extensions.remove
 import com.dinosys.sportbook.features.BaseFragment
+import com.dinosys.sportbook.managers.AuthenticationManager
 import com.dinosys.sportbook.networks.models.TimeVenueUIModel
 import com.dinosys.sportbook.utils.LogUtil
+import com.dinosys.sportbook.utils.ToastUtil
 import com.jakewharton.rxbinding2.view.RxView
+import io.reactivex.Observable
+import io.reactivex.ObservableSource
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_my_tournament_time_rank_venue_change.*
 import org.json.JSONArray
 import org.json.JSONObject
+import retrofit2.Response
 import java.lang.ref.WeakReference
 import javax.inject.Inject
 
@@ -61,10 +68,38 @@ class TimeRankVenueFragment : BaseFragment(), OnTimeBlocksListener {
                                 }
                         objecPreferredTimeBlocks.put(day, jsonArray)
                     }
-                    timerankvenueApi.updateTimeSlotsModel(activity, objecPreferredTimeBlocks, arrayRankingVenue,idTeam)
+
+
+                    timerankvenueApi.updateTimeSlotsModel(activity, objecPreferredTimeBlocks, arrayRankingVenue, 111)
+                            .subscribeOn(Schedulers.newThread())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .onErrorResumeNext {
+                                t: Throwable? ->
+                                onUpdateTimeRankErrorResponse(t?.message)
+                            }
+
+
                 }
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({ response -> onUpdateTimeRankDataResponse(response = response) })
 
+        addDisposable(btnUpdateTimeVenue)
+    }
 
+    private fun onUpdateTimeRankDataResponse(response: Response<JSONObject>?) {
+        val statusCode = response?.code()
+        when (statusCode) {
+            in 200..300 -> {
+                val update = response?.body()
+                LogUtil.e(TAG, update.toString())
+            }
+            else -> onUpdateTimeRankErrorResponse(getString(R.string.error_update_timerank_failure_text))
+        }
+    }
+
+    private fun onUpdateTimeRankErrorResponse(message: String?): ObservableSource<out Response<JSONObject>>? {
+        ToastUtil.show(appContext, message)
+        return Observable.empty()
     }
 
     fun convertPreferTimeBlockItemToJSONArray(timeBlock: String): JSONArray? {
