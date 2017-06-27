@@ -21,14 +21,13 @@
             android:text="TournamentName" />
 
         <TextView
-            android:visibility="invisible"
             android:id="@+id/tvRegisterStatus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@id/tvTournamentName"
             android:layout_marginLeft="16dp"
             android:layout_marginTop="4dp"
-            android:text="Registered" />
+            android:text="" />
 
         <TextView
             android:id="@+id/tvRegisterTime"

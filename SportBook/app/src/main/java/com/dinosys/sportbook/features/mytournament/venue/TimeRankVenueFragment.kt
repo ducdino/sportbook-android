@@ -3,27 +3,38 @@ package com.dinosys.sportbook.features.mytournament.venue
 import android.support.v7.widget.LinearLayoutManager
 import com.dinosys.sportbook.R
 import com.dinosys.sportbook.application.SportbookApp
+import com.dinosys.sportbook.extensions.appContext
 import com.dinosys.sportbook.features.BaseFragment
-import com.dinosys.sportbook.networks.models.RankVenueModel
-import com.dinosys.sportbook.networks.models.TimeVenue
+import com.dinosys.sportbook.networks.models.TimeVenueUIModel
+import com.dinosys.sportbook.utils.LogUtil
 import com.jakewharton.rxbinding2.view.RxView
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_my_tournament_time_rank_venue_change.*
+import org.json.JSONArray
+import org.json.JSONObject
+import java.lang.ref.WeakReference
 import javax.inject.Inject
 
-class TimeRankVenueFragment : BaseFragment() {
+class TimeRankVenueFragment : BaseFragment(), OnTimeBlocksListener {
 
     override fun inflateFromLayout(): Int = R.layout.fragment_my_tournament_time_rank_venue_change
+
+    var timeVenueList: ArrayList<TimeVenueUIModel>? = null
+
+    var timeVenueAdapter: InputTimeAdapter? = null
+
+    var idTeam: Int? = null
 
     @Inject
     lateinit var timerankvenueApi: TimeRankVenueViewModel
 
     override fun initViews() {
-        rvTimeVenue.adapter = TimeRankVenueAdapter(sampleList)
+        idTeam = this.arguments.getInt(TEAM_ID)
+        timeVenueList = getList()
+        timeVenueAdapter = InputTimeAdapter(timeVenueList, WeakReference(this))
+        rvTimeVenue.adapter = timeVenueAdapter
         rvTimeVenue.layoutManager = LinearLayoutManager(context)
-
-        rvRankVenue.adapter = TimeRankVenueAdapter(sampleListRank)
-        rvRankVenue.layoutManager = LinearLayoutManager(context)
     }
 
     override fun initData() {
@@ -32,37 +43,75 @@ class TimeRankVenueFragment : BaseFragment() {
 
     override fun initListeners() {
         super.initListeners()
-        val btnTimeSlotsDisposable = RxView.clicks(btnUpdateTimeVenue)
-                .subscribeOn(AndroidSchedulers.mainThread())
-        //.switchMap {  }
 
+        val btnUpdateTimeVenue = RxView.clicks(btnUpdateTimeVenue)
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .switchMap {
+                    val objecPreferredTimeBlocks: JSONObject = JSONObject()
+                    // TODO: Raniking Venue need implement later
+                    val arrayRankingVenue: JSONArray = JSONArray("[1,2,3,4]")
+
+                    activity.resources.getStringArray(R.array.array_time_range_days).forEach { day ->
+                        val jsonArray = JSONArray()
+                        timeVenueList?.filter { timeVenueUIModel -> !timeVenueUIModel.isHeader!! }
+                                ?.filter { timeVenueUIModel -> timeVenueUIModel.isAvailableBlockTime(day) }
+                                ?.forEach { timeVenueUIModel ->
+                                    val timeBlockItemJsonArray = convertPreferTimeBlockItemToJSONArray(timeVenueUIModel.timeBlock!!)
+                                    jsonArray.put(timeBlockItemJsonArray)
+                                }
+                        objecPreferredTimeBlocks.put(day, jsonArray)
+                    }
+                    timerankvenueApi.updateTimeSlotsModel(activity, objecPreferredTimeBlocks, arrayRankingVenue,idTeam)
+                }
+
+
+    }
+
+    fun convertPreferTimeBlockItemToJSONArray(timeBlock: String): JSONArray? {
+        if (timeBlock == activity.getString(R.string.time_block_9am_12am_text)) {
+            return JSONArray("[9,10,11]")
+        } else if (timeBlock == activity.getString(R.string.time_block_1pm_4pm_text)) {
+            return JSONArray("[13,14,15]")
+        } else if (timeBlock == activity.getString(R.string.time_block_5pm_7pm_text)) {
+            return JSONArray("[17,18]")
+        }
+        return null
+    }
+
+
+    fun getList(): ArrayList<TimeVenueUIModel> {
+        val items = ArrayList<TimeVenueUIModel>()
+        //val days = ArrayList<String>()
+        items.add(TimeVenueUIModel(true, "", null));
+        items.add(TimeVenueUIModel(false, getString(R.string.time_block_9am_12am_text), null));
+        items.add(TimeVenueUIModel(false, getString(R.string.time_block_1pm_4pm_text), null));
+        items.add(TimeVenueUIModel(false, getString(R.string.time_block_5pm_7pm_text), null));
+
+        return items
+    }
+
+    override fun OnTimeBlockClick(day: String, blockTime: String) {
+        val timeVenue = timeVenueList?.filter { timeVenueUIModel -> timeVenueUIModel.timeBlock!!.equals(blockTime) }?.get(0)
+        if (timeVenue == null) {
+            return
+        }
+        if (timeVenue.blockTimeRangeList == null) {
+            timeVenue.blockTimeRangeList = ArrayList<String>()
+        }
+
+        val blockTimeRangeList = timeVenue.blockTimeRangeList
+        if (blockTimeRangeList!!.contains(day)) {
+            blockTimeRangeList.remove(day)
+        } else {
+            blockTimeRangeList.add(day)
+        }
+        timeVenueAdapter?.notifyDataSetChanged()
     }
 
     companion object {
         val TAG: String = "TimeRankVenueFragment"
         val KEY_ID: String = "idTournament"
+        val TEAM_ID: String = ""
     }
-
-    val sampleList: ArrayList<TimeVenue>
-        get() {
-            val items = ArrayList<TimeVenue>()
-            //val days = ArrayList<String>()
-            items.add(TimeVenue(true, "", null));
-            items.add(TimeVenue(false, "9am-12am", null));
-            items.add(TimeVenue(false, "1pm-4pm", null));
-            items.add(TimeVenue(false, "5pm-7pm", null));
-
-            return items
-        }
-
-    val sampleListRank: ArrayList<RankVenueModel>
-        get() {
-            val items = ArrayList<RankVenueModel>()
-            items.add(RankVenueModel("DEF Venue", "3km-10mins"))
-            items.add(RankVenueModel("ABC Venue", "5km-25mins"))
-            items.add(RankVenueModel("XYZ Venue", "10km-35mins"))
-            items.add(RankVenueModel("HIJ Venue", "13km-40mins"))
-            return items
-        }
 
 }

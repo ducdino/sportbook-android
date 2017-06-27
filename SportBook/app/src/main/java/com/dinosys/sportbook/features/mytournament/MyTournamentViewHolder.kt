@@ -3,7 +3,6 @@ package com.dinosys.sportbook.features.mytournament
 import android.support.v7.widget.RecyclerView
 import android.view.View
 import com.dinosys.sportbook.features.tournament.OnTournamentListener
-import com.dinosys.sportbook.networks.models.TeamDataModel
 import com.dinosys.sportbook.networks.models.TournamentDataModel
 import kotlinx.android.synthetic.main.item_my_tournament.view.*
 import java.lang.ref.WeakReference
@@ -17,7 +16,7 @@ open class MyTournamentViewHolder(itemView: View) : RecyclerView.ViewHolder(item
         }
         tvTournamentName.text = tournament.name
         tvTournamentTime.text = tournament.startDate
-        //tvRegisterStatus.text = teamDataModel.status
+        tvRegisterStatus.text = tournament.teams?.get(0)?.status
         //tvRegisterTime.text = teamDataModel.created_at
         //ivTournament.loadFromUrl(tournament.image_url)
     }

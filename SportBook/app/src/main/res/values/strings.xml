@@ -36,13 +36,9 @@
     <string name="error_please_indicate_your_skill_level">Please indicate your skill level</string>
     <string name="error_your_payment_is_not_actived">My tournament can not be actived until your payment is confirmed. Please check with operation for more information</string>
     <string name="warning_title">Warning</string>
-    <string-array name="array_time_range_days">
-        <item>S</item>
-        <item>M</item>
-        <item>T</item>
-        <item>W</item>
-        <item>T</item>
-        <item>F</item>
-        <item>S</item>
-    </string-array>
+    <string name="button_submit">Submit</string>
+    <string name="time_block_9am_12am_text">9am-12am</string>
+    <string name="time_block_1pm_4pm_text">1pm-4pm</string>
+    <string name="time_block_5pm_7pm_text">5pm-7pm</string>
+
 </resources>

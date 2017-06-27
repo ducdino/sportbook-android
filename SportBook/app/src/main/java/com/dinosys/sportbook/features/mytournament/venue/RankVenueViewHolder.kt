@@ -1,18 +1,17 @@
 package com.dinosys.sportbook.features.mytournament.venue
 
-import android.app.FragmentManager
 import android.support.v7.widget.RecyclerView
 import android.view.View
 import android.widget.ArrayAdapter
-import com.dinosys.sportbook.networks.models.RankVenueModel
+import com.dinosys.sportbook.networks.models.RankVenueUIModel
 import kotlinx.android.synthetic.main.item_my_tournament_rank_venue.view.*
 
 class RankVenueViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-    fun bindView(rankVenueModel: RankVenueModel, position: Int) = with(itemView) {
+    fun bindView(rankVenueUIModel: RankVenueUIModel?, position: Int) = with(itemView) {
 
-        tvVenueName.text = rankVenueModel.venue_name
-        tvVenueDistance.text = rankVenueModel.venue_distance_time
+        tvVenueName.text = rankVenueUIModel?.venueName
+        tvVenueDistance.text = rankVenueUIModel?.venueDistanceTime
         spVenueRank.adapter = ArrayAdapter<String>(context,android.R.layout.simple_spinner_dropdown_item,sampleRank)
 
     }
